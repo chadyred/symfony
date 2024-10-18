@@ -268,7 +268,7 @@ abstract class AbstractDescriptorTestCase extends TestCase
 
     abstract protected static function getFormat();
 
-    private function assertDescription($expectedDescription, $describedObject, array $options = [])
+    private function assertDescription($expectedDescription, $describedObject, array $options = []): void
     {
         $options['is_debug'] = false;
         $options['raw_output'] = true;
@@ -360,5 +360,23 @@ abstract class AbstractDescriptorTestCase extends TestCase
         }
 
         return $data;
+    }
+
+    /** @dataProvider getDescribeContainerBuilderWithLocatorAndIteratorTestData */
+    public function testDescribeContainerBuilderWithLocatorAndIterator(ContainerBuilder $containerBuilder, $expectedDescription, array $options)
+    {
+        $this->assertDescription($expectedDescription, $containerBuilder, $options);
+    }
+
+    public static function getDescribeContainerBuilderWithLocatorAndIteratorTestData(): \Generator
+    {
+        $file = \sprintf('%s.%s', trim('definition_arguments_with_locator', '.'), static::getFormat());
+        $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
+
+        yield 'Show arguments with multi argument type ('.$file.')' => [
+            'containerBuilder' => ObjectsProvider::getContainerServicesWithLocatorArguments(),
+            'expectedDescription' => $description,
+            'options' => ['show_arguments' => true, 'id' => 'definition_1'],
+        ];
     }
 }

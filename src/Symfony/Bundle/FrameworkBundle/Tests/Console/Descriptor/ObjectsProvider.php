@@ -16,10 +16,14 @@ use Symfony\Bundle\FrameworkBundle\Tests\Fixtures\Suit;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Argument\AbstractArgument;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Tests\Fixtures\NamedEnumArgumentDummy;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Routing\CompiledRoute;
 use Symfony\Component\Routing\Route;
@@ -113,13 +117,13 @@ class ObjectsProvider
     public static function getContainerDeprecations()
     {
         $builderWithDeprecations = new ContainerBuilder();
-        $builderWithDeprecations->setParameter('kernel.cache_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
-        $builderWithDeprecations->setParameter('kernel.build_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
+        $builderWithDeprecations->setParameter('kernel.cache_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
+        $builderWithDeprecations->setParameter('kernel.build_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
         $builderWithDeprecations->setParameter('kernel.container_class', 'KernelContainerWith');
 
         $builderWithoutDeprecations = new ContainerBuilder();
-        $builderWithoutDeprecations->setParameter('kernel.cache_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
-        $builderWithoutDeprecations->setParameter('kernel.build_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
+        $builderWithoutDeprecations->setParameter('kernel.cache_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
+        $builderWithoutDeprecations->setParameter('kernel.build_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
         $builderWithoutDeprecations->setParameter('kernel.container_class', 'KernelContainerWithout');
 
         return [
@@ -242,6 +246,56 @@ class ObjectsProvider
         ];
     }
 
+    public static function getContainerServicesWithLocatorArguments()
+    {
+        $container = new ContainerBuilder(new ParameterBag([
+            'kernel.debug' => true,
+            'kernel.project_dir' => __DIR__,
+            'kernel.container_class' => 'testContainer',
+        ]));
+        $service0 = new Definition('Full\\Qualified\\Class1');
+        $service1 = new Definition('Full\\Qualified\\Class2');
+        $service2 = new Definition('Full\\Qualified\\Class3');
+        $service3 = new Definition('Full\\Qualified\\Class4');
+        $container->addDefinitions([
+            'definition_1' => $service0
+                ->addArgument(new Reference('definition_2'))
+                ->addArgument(new ServiceLocatorArgument(
+                    new TaggedIteratorArgument('app_tag'),
+                ))
+                ->addArgument(new ServiceLocatorArgument([
+                    'Full\\Qualified\\Class2' => new Reference('definition_2'),
+                    'Full\\Qualified\\Class3' => new Reference('definition_3'),
+                    'Full\\Qualified\\Class4' => new Reference('definition_4'),
+                ]))
+                ->addArgument(ServiceLocatorTagPass::register($container, [
+                    new Reference('definition_2'),
+                    new Reference('definition_3'),
+                    new Reference('definition_4'),
+                ]))
+                ->addArgument(new AbstractArgument('to complete'))
+                ->addArgument([
+                    new Reference('definition_2'),
+                    new Reference('definition_3'),
+                    new Reference('definition_4'),
+                ])
+                ->addArgument(FooUnitEnum::BAR)
+                ->addArgument(new IteratorArgument([
+                    new Reference('definition_2'),
+                    new Reference('definition_3'),
+                    new Reference('definition_4'),
+                ])),
+            'definition_2' => $service1
+                ->addTag('app_tag'),
+            'definition_3' => $service2
+                ->addTag('app_tag'),
+            'definition_4' => $service3
+                ->addTag('app_tag')
+        ]);
+
+        return $container;
+    }
+
     public static function getContainerAliases()
     {
         return [
@@ -255,7 +309,7 @@ class ObjectsProvider
         $eventDispatcher = new EventDispatcher();
 
         $eventDispatcher->addListener('event1', 'var_dump', 255);
-        $eventDispatcher->addListener('event1', fn () => 'Closure', -1);
+        $eventDispatcher->addListener('event1', fn() => 'Closure', -1);
         $eventDispatcher->addListener('event2', new CallableClass());
 
         return ['event_dispatcher_1' => $eventDispatcher];
@@ -268,7 +322,7 @@ class ObjectsProvider
             'callable_2' => ['Symfony\\Bundle\\FrameworkBundle\\Tests\\Console\\Descriptor\\CallableClass', 'staticMethod'],
             'callable_3' => [new CallableClass(), 'method'],
             'callable_4' => 'Symfony\\Bundle\\FrameworkBundle\\Tests\\Console\\Descriptor\\CallableClass::staticMethod',
-            'callable_6' => fn () => 'Closure',
+            'callable_6' => fn() => 'Closure',
             'callable_7' => new CallableClass(),
             'callable_from_callable' => (new CallableClass())(...),
         ];
