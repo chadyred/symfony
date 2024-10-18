@@ -350,15 +350,21 @@ class TextDescriptor extends Descriptor
                 $tableRows[] = ['Factory Function', $factory];
             }
         }
-
         $showArguments = isset($options['show_arguments']) && $options['show_arguments'];
+        $showLocatorDependencies = isset($options['show_locator_services']) && $options['show_locator_services'];
         $argumentsInformation = [];
+        $locatorsInformation = [];
         if ($showArguments && ($arguments = $definition->getArguments())) {
             foreach ($arguments as $argument) {
                 if ($argument instanceof ServiceClosureArgument) {
                     $argument = $argument->getValues()[0];
                 }
                 if ($argument instanceof Reference) {
+                    if ($showLocatorDependencies && $container->getDefinition($argument)->hasTag('container.service_locator')) {
+                        $serviceAssociated = $container->getDefinition($argument)->hasTag('container.service_locator') === false ? '': array_keys($container->getDefinition($argument)->getArguments()[0]);
+                        $locatorsInformation[(string) $argument] = implode(',', $serviceAssociated);
+                    }
+
                     $argumentsInformation[] = sprintf('Service(%s)', (string) $argument);
                 } elseif ($argument instanceof IteratorArgument) {
                     if ($argument instanceof TaggedIteratorArgument) {
@@ -369,6 +375,7 @@ class TextDescriptor extends Descriptor
 
                     foreach ($argument->getValues() as $ref) {
                         $argumentsInformation[] = sprintf('- Service(%s)', $ref);
+
                     }
                 } elseif ($argument instanceof ServiceLocatorArgument) {
                     $argumentsInformation[] = sprintf('Service locator (%d element(s))', \count($argument->getValues()));
