@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
@@ -39,6 +40,8 @@ use Symfony\Contracts\Service\ServiceProviderInterface;
  */
 class TextDescriptor extends Descriptor
 {
+    use PriorityTaggedServiceTrait;
+
     public function __construct(
         private ?FileLinkFormatter $fileLinkFormatter = null,
     ) {
@@ -393,56 +396,71 @@ class TextDescriptor extends Descriptor
         $options['output']->table($tableHeaders, $tableRows);
 
         $expandIterableServices = isset($options['expand_iterable_services']) && $options['expand_iterable_services'];
-        $tableRows = [];
 
         if ($expandIterableServices && ($arguments = $definition->getArguments())) {
             foreach ($arguments as $argument) {
-                $locatorsInformation = [];
+                $table = new Table($this->getOutput());
+                $table->setHeaders(['Order', 'Services injected']);
+                $orderedTaggedServices = [];
+                $order = 0;
+
                 if ($argument instanceof Reference) {
                     $argumentDefinition = $container->getDefinition($argument);
 
+                    $service = \sprintf('Service(%s)', $argument);
+
                     if ($argumentDefinition->hasTag('container.service_locator')) {
+                        $this->getOutput()->section($service);
+
                         foreach ($argumentDefinition->getArguments()[0] ?? null as $service) {
-                            $locatorsInformation[] = $service->getValues()[0];
+                            $orderedTaggedServices[] = $service->getValues()[0];
                         }
-                        $tableRows[] = [\sprintf('Service(%s)', (string) $argument), implode("\n", $locatorsInformation)];
-                    } elseif ($container->getReflectionClass($argumentDefinition->getClass())->implementsInterface(ServiceProviderInterface::class)) {
-                        /** @var ServiceProviderInterface $serviceLocator */
-                        $serviceLocator = $container->get($argument);
-                        $tableRows[] = [\sprintf('Service(%s)', (string) $argument), implode("\n", array_keys($serviceLocator->getProvidedServices()))];
+                        $table->setRows([
+                            [++$order, implode("\n", $orderedTaggedServices)],
+                        ])->render();
+                    } elseif ($serviceLocator = $this->resolveServiceDefinition($container, (string) $argument) instanceof ServiceProviderInterface) {
+                        $this->getOutput()->section($service);
+
+                        /* @var ServiceProviderInterface $serviceLocator */
+                        $table->setRows([
+                            [++$order, implode("\n", array_keys($serviceLocator->getProvidedServices()))],
+                        ])->render();
                     }
                 } elseif ($argument instanceof IteratorArgument) {
+                    $table->setHeaders(['Order by priority', 'Services injected']);
+
                     if ($argument instanceof TaggedIteratorArgument) {
                         $service = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argument->getValues())));
-
-                        foreach (array_keys($container->findTaggedServiceIds($argument->getTag())) as $ref) {
-                            $locatorsInformation[] = $ref;
+                        foreach ($this->findAndSortTaggedServices($argument->getTag(), $container) as $key => $ref) {
+                            $table->addRow(
+                                [++$key, $ref],
+                            );
                         }
                     } else {
                         $service = \sprintf('Iterator (%d element(s))', \count($argument->getValues()));
 
                         foreach ($argument->getValues() as $ref) {
-                            $locatorsInformation[] = $ref;
+                            $orderedTaggedServices[] = $ref;
                         }
                     }
 
-                    $tableRows[] = [$service, implode("\n", $locatorsInformation)];
+                    $this->getOutput()->section($service);
+                    $table->render();
                 } elseif ($argument instanceof ServiceLocatorArgument) {
-                    $tableRows[] = [
-                        \sprintf('Service locator (%d element(s))', \count($argument->getValues())),
-                        '-',
-                    ];
+                    // @todo find a way to test it !
+                    $service = \sprintf('Service locator (%d element(s))', \count($argument->getValues()));
+                    $this->getOutput()->section($service);
+                    $table->setRows([
+                        [++$order, $service],
+                    ])->render();
                 } elseif (\is_array($argument)) {
-                    $tableRows[] = [
-                        \sprintf('Array (%d element(s))', \count($argument)),
-                        implode("\n", array_map(static fn (ServiceClosureArgument $s) => (string) $s->getValues()[0], $argument)),
-                    ];
+                    $service = \sprintf('Array (%d element(s))', \count($argument));
+                    $this->getOutput()->section($service);
+                    $table->setRows([
+                        [++$order, implode("\n", array_map(static fn (ServiceClosureArgument $s) => (string) $s->getValues()[0], $argument))],
+                    ])->render();
                 }
             }
-
-            $table = new Table($this->getOutput());
-            $table->setHeaders(['Iterable service', 'Services injected'])->setRows($tableRows);
-            $table->render();
         }
     }
 
