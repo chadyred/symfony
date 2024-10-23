@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\ErrorHandler\ErrorRenderer\FileLinkFormatter;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Route;
@@ -44,7 +45,8 @@ class TextDescriptor extends Descriptor
 
     public function __construct(
         private ?FileLinkFormatter $fileLinkFormatter = null,
-    ) {
+    )
+    {
     }
 
     protected function describeRouteCollection(RouteCollection $routes, array $options = []): void
@@ -289,8 +291,8 @@ class TextDescriptor extends Descriptor
             $options['output']->title(\sprintf('Information for Service "<info>%s</info>"', $options['id']));
         }
 
-        if ('' !== $classDescription = $this->getClassDescription((string) $definition->getClass())) {
-            $options['output']->text($classDescription."\n");
+        if ('' !== $classDescription = $this->getClassDescription((string)$definition->getClass())) {
+            $options['output']->text($classDescription . "\n");
         }
 
         $tableHeaders = ['Option', 'Value'];
@@ -303,7 +305,7 @@ class TextDescriptor extends Descriptor
             $tagInformation = [];
             foreach ($tags as $tagName => $tagData) {
                 foreach ($tagData as $tagParameters) {
-                    $parameters = array_map(fn ($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
+                    $parameters = array_map(fn($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
                     $parameters = implode(', ', $parameters);
 
                     if ('' === $parameters) {
@@ -363,7 +365,12 @@ class TextDescriptor extends Descriptor
                     $argument = $argument->getValues()[0];
                 }
                 if ($argument instanceof Reference) {
-                    $argumentsInformation[] = \sprintf('Service(%s)', (string) $argument);
+                    $argumentDefinition = $container->getDefinition($argument);
+                    if ($argumentDefinition->hasTag('container.service_locator')) {
+                        $argumentsInformation[] = \sprintf('Service locator(%s)', $argument);
+                    } else {
+                        $argumentsInformation[] = \sprintf('Service(%s)', $argument);
+                    }
                 } elseif ($argument instanceof IteratorArgument) {
                     if ($argument instanceof TaggedIteratorArgument) {
                         $argumentsInformation[] = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argument->getValues())));
@@ -400,66 +407,57 @@ class TextDescriptor extends Descriptor
         if ($expandIterableServices && ($arguments = $definition->getArguments())) {
             foreach ($arguments as $argument) {
                 $table = new Table($this->getOutput());
-                $table->setHeaders(['Order', 'Services injected']);
-                $orderedTaggedServices = [];
-                $order = 0;
+                $table->setHeaders(['Order', 'Argument(s)']);
 
-                if ($argument instanceof Reference) {
-                    $argumentDefinition = $container->getDefinition($argument);
+                if ($argument instanceof Reference
+                    && ($argumentDefinition = $container->getDefinition($argument))->hasTag('container.service_locator')
+                ) {
+                    $serviceDescription = \sprintf('Service locator(%s)', $argument);
 
-                    $service = \sprintf('Service(%s)', $argument);
+                    $this->getOutput()->section($serviceDescription);
+                    $order = 0;
 
-                    if ($argumentDefinition->hasTag('container.service_locator')) {
-                        $this->getOutput()->section($service);
+                    foreach ($argumentDefinition->getArguments()[0] ?? null as $serviceDescription) {
+                        $table->addRow(
+                            [++$order, $serviceDescription->getValues()[0]],
+                        );
 
-                        foreach ($argumentDefinition->getArguments()[0] ?? null as $service) {
-                            $orderedTaggedServices[] = $service->getValues()[0];
-                        }
-                        $table->setRows([
-                            [++$order, implode("\n", $orderedTaggedServices)],
-                        ])->render();
-                    } elseif ($serviceLocator = $this->resolveServiceDefinition($container, (string) $argument) instanceof ServiceProviderInterface) {
-                        $this->getOutput()->section($service);
-
-                        /* @var ServiceProviderInterface $serviceLocator */
-                        $table->setRows([
-                            [++$order, implode("\n", array_keys($serviceLocator->getProvidedServices()))],
-                        ])->render();
                     }
                 } elseif ($argument instanceof IteratorArgument) {
-                    $table->setHeaders(['Order by priority', 'Services injected']);
-
                     if ($argument instanceof TaggedIteratorArgument) {
-                        $service = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argument->getValues())));
-                        foreach ($this->findAndSortTaggedServices($argument->getTag(), $container) as $key => $ref) {
+                        $serviceDescription = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argument->getValues())));
+                        foreach ($this->findAndSortTaggedServices($argument->getTag(), $container) as $order => $ref) {
                             $table->addRow(
-                                [++$key, $ref],
+                                [++$order, $ref],
                             );
                         }
                     } else {
-                        $service = \sprintf('Iterator (%d element(s))', \count($argument->getValues()));
+                        $serviceDescription = \sprintf('Iterator (%d element(s))', \count($argument->getValues()));
 
-                        foreach ($argument->getValues() as $ref) {
-                            $orderedTaggedServices[] = $ref;
+                        foreach ($argument->getValues() as $order => $ref) {
+                            $table->addRow(
+                                [++$order, $ref],
+                            );
                         }
                     }
 
-                    $this->getOutput()->section($service);
-                    $table->render();
-                } elseif ($argument instanceof ServiceLocatorArgument) {
-                    // @todo find a way to test it !
-                    $service = \sprintf('Service locator (%d element(s))', \count($argument->getValues()));
-                    $this->getOutput()->section($service);
-                    $table->setRows([
-                        [++$order, $service],
-                    ])->render();
+                    $this->getOutput()->section($serviceDescription);
                 } elseif (\is_array($argument)) {
                     $service = \sprintf('Array (%d element(s))', \count($argument));
                     $this->getOutput()->section($service);
-                    $table->setRows([
-                        [++$order, implode("\n", array_map(static fn (ServiceClosureArgument $s) => (string) $s->getValues()[0], $argument))],
-                    ])->render();
+
+                    foreach ($argument as $order => $ref) {
+                        $table->addRow(
+                            [++$order, $ref],
+                        );
+                    }
+                } else {
+                    $this->getOutput()->section(\sprintf('Service(%s)', $argument));
+
+                    $table->addRow(['-', $argument]);
                 }
+
+                $table->render();
             }
         }
     }
@@ -493,16 +491,16 @@ class TextDescriptor extends Descriptor
     protected function describeContainerAlias(Alias $alias, array $options = [], ?ContainerBuilder $container = null): void
     {
         if ($alias->isPublic() && !$alias->isPrivate()) {
-            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string) $alias));
+            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string)$alias));
         } else {
-            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string) $alias));
+            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string)$alias));
         }
 
         if (!$container) {
             return;
         }
 
-        $this->describeContainerDefinition($container->getDefinition((string) $alias), array_merge($options, ['id' => (string) $alias]), $container);
+        $this->describeContainerDefinition($container->getDefinition((string)$alias), array_merge($options, ['id' => (string)$alias]), $container);
     }
 
     protected function describeContainerParameter(mixed $parameter, ?array $deprecation, array $options = []): void
@@ -528,13 +526,13 @@ class TextDescriptor extends Descriptor
         $options['output']->title('Symfony Container Environment Variables');
 
         if (null !== $name = $options['name'] ?? null) {
-            $options['output']->comment('Displaying detailed environment variable usage matching '.$name);
+            $options['output']->comment('Displaying detailed environment variable usage matching ' . $name);
 
             $matches = false;
             foreach ($envs as $env) {
                 if ($name === $env['name'] || false !== stripos($env['name'], $name)) {
                     $matches = true;
-                    $options['output']->section('%env('.$env['processor'].':'.$env['name'].')%');
+                    $options['output']->section('%env(' . $env['processor'] . ':' . $env['name'] . ')%');
                     $options['output']->table([], [
                         ['<info>Default value</>', $env['default_available'] ? $dump($env['default_value']) : 'n/a'],
                         ['<info>Real value</>', $env['runtime_available'] ? $dump($env['runtime_value']) : 'n/a'],
@@ -601,7 +599,7 @@ class TextDescriptor extends Descriptor
         } else {
             $title .= ' Grouped by Event';
             // Try to see if "events" exists
-            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn ($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
+            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
         }
 
         $options['output']->title($title);
@@ -726,7 +724,7 @@ class TextDescriptor extends Descriptor
                 return \sprintf('%s::%s()', $class->name, $r->name);
             }
 
-            return $r->name.'()';
+            return $r->name . '()';
         }
 
         if (method_exists($callable, '__invoke')) {
