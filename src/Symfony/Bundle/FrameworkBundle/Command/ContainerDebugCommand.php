@@ -45,7 +45,6 @@ class ContainerDebugCommand extends Command
                 new InputArgument('name', InputArgument::OPTIONAL, 'A service name (foo)'),
                 new InputOption('show-arguments', null, InputOption::VALUE_NONE, 'Show arguments in services'),
                 new InputOption('show-hidden', null, InputOption::VALUE_NONE, 'Show hidden (internal) services'),
-                new InputOption('expand-iterable-services', null, InputOption::VALUE_NONE, 'Show services inject into locator services'),
                 new InputOption('tag', null, InputOption::VALUE_REQUIRED, 'Show all services with a specific tag'),
                 new InputOption('tags', null, InputOption::VALUE_NONE, 'Display tagged services for an application'),
                 new InputOption('parameter', null, InputOption::VALUE_REQUIRED, 'Display a specific parameter for an application'),
@@ -110,10 +109,6 @@ using the <info>--show-hidden</info> flag:
 The <info>--format</info> option specifies the format of the command output:
 
   <info>php %command.full_name% --format=json</info>
-
-To get specific information about iterable arguments use the <info>--expand-iterable-services</info> option:
-
-  <info>php %command.full_name% name --expand-iterable-services</info>
 EOF
             )
         ;
@@ -168,7 +163,6 @@ EOF
         $options['format'] = $input->getOption('format');
         $options['show_arguments'] = $input->getOption('show-arguments');
         $options['show_hidden'] = $input->getOption('show-hidden');
-        $options['expand_iterable_services'] = $input->getOption('expand-iterable-services');
         $options['raw_text'] = $input->getOption('raw');
         $options['output'] = $io;
         $options['is_debug'] = $kernel->isDebug();
