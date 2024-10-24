@@ -270,7 +270,7 @@ abstract class AbstractDescriptorTestCase extends TestCase
 
     private function assertDescription($expectedDescription, $describedObject, array $options = [])
     {
-        $options['is_debug'] = false;
+        $options['is_debug'] = true;
         $options['raw_output'] = true;
         $options['raw_text'] = true;
         $output = new BufferedOutput(BufferedOutput::VERBOSITY_NORMAL, true);

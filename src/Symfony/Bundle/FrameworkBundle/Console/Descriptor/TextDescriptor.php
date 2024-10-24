@@ -364,7 +364,7 @@ class TextDescriptor extends Descriptor
         if ($showArguments && ($arguments = $definition->getArguments())) {
             $table = new Table($this->getOutput());
             $table->setHeaderTitle('Arguments');
-            $table->setHeaders(['#', 'Service', 'Argument(s)', 'Order']);
+            $table->setHeaders(['#', 'Service', 'Argument(s) order by priority']);
 
             foreach ($arguments as $position => $argument) {
                 if ($argument instanceof Reference
@@ -376,9 +376,9 @@ class TextDescriptor extends Descriptor
                     $argumentsWrapped = $argumentDefinition->getArguments()[0];
                     foreach ($argumentsWrapped ?? null as $key => $serviceWrapper) {
                         if (array_key_first($argumentsWrapped) === $key) {
-                            $table->addRow([++$position, $serviceDescription, $serviceWrapper->getValues()[0], ++$order]);
+                            $table->addRow([++$position, $serviceDescription, $serviceWrapper->getValues()[0]]);
                         } else {
-                            $table->addRow(['', '', $serviceWrapper->getValues()[0], ++$order]);
+                            $table->addRow(['', '', $serviceWrapper->getValues()[0]]);
                         }
                     }
                 } elseif ($argument instanceof IteratorArgument) {
@@ -390,9 +390,9 @@ class TextDescriptor extends Descriptor
 
                         foreach ($taggedOrderedServices as $order => $ref) {
                             if (array_key_first($taggedOrderedServices) === $order) {
-                                $table->addRow([++$position, $serviceDescription, $ref, ++$order]);
+                                $table->addRow([++$position, $serviceDescription, $ref]);
                             } else {
-                                $table->addRow(['', '', $ref, ++$order]);
+                                $table->addRow(['', '', $ref]);
                             }
                         }
                     } else {
@@ -400,9 +400,9 @@ class TextDescriptor extends Descriptor
 
                         foreach ($argumentValues as $order => $ref) {
                             if (array_key_first($argumentValues) === $order) {
-                                $table->addRow([++$position, $serviceDescription, $ref, ++$order]);
+                                $table->addRow([++$position, $serviceDescription, $ref]);
                             } else {
-                                $table->addRow(['', '', $ref, ++$order]);
+                                $table->addRow(['', '', $ref]);
                             }
                         }
                     }
