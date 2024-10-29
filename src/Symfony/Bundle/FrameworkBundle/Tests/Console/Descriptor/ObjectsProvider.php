@@ -263,6 +263,7 @@ class ObjectsProvider
                 ->addArgument(new ServiceLocatorArgument(
                     new TaggedIteratorArgument('app_tag'),
                 ))
+                ->addArgument(new TaggedIteratorArgument('app_tag'))
                 ->addArgument(new ServiceLocatorArgument([
                     'Full\\Qualified\\Class2' => new Reference('definition_2'),
                     'Full\\Qualified\\Class3' => new Reference('definition_3'),
@@ -294,6 +295,27 @@ class ObjectsProvider
         ]);
 
         return $container;
+    }
+
+    public static function getServicesWithLocatorArgumentsWithoutContainer()
+    {
+        $definition0 = new Definition('Full\\Qualified\\Class1');
+
+        return $definition0
+            ->addArgument(new ServiceLocatorArgument(
+                new TaggedIteratorArgument('app_tag'),
+            ))
+            ->addArgument(new TaggedIteratorArgument('app_tag'))
+            ->addArgument(new ServiceLocatorArgument([
+                'Full\\Qualified\\Class2' => new Reference('definition_2'),
+                'Full\\Qualified\\Class3' => new Reference('definition_3'),
+                'Full\\Qualified\\Class4' => new Reference('definition_4'),
+            ]))
+            ->addArgument(new IteratorArgument([
+                new Definition('definition_2'),
+                new Definition('definition_3'),
+                new Definition('definition_4'),
+            ]));
     }
 
     public static function getContainerAliases()

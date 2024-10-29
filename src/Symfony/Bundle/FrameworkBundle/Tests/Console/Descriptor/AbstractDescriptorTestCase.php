@@ -363,20 +363,29 @@ abstract class AbstractDescriptorTestCase extends TestCase
     }
 
     /** @dataProvider getDescribeContainerBuilderWithLocatorAndIteratorTestData */
-    public function testDescribeContainerBuilderWithLocatorAndIterator(ContainerBuilder $containerBuilder, $expectedDescription, array $options)
+    public function testDescribeContainerBuilderWithLocatorAndIterator($object, $expectedDescription, array $options)
     {
-        $this->assertDescription($expectedDescription, $containerBuilder, $options);
+        $this->assertDescription($expectedDescription, $object, $options);
     }
 
     public static function getDescribeContainerBuilderWithLocatorAndIteratorTestData(): \Generator
     {
-        $file = \sprintf('%s.%s', trim('definition_arguments_with_locator', '.'), static::getFormat());
+        $file = \sprintf('%s.%s', trim('definition_arguments_with_locator_in_container', '.'), static::getFormat());
         $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
 
-        yield 'Show arguments with multi argument type ('.$file.')' => [
-            'containerBuilder' => ObjectsProvider::getContainerServicesWithLocatorArguments(),
+        yield 'Show arguments with multi argument into a container type ('.$file.')' => [
+            'object' => ObjectsProvider::getContainerServicesWithLocatorArguments(),
             'expectedDescription' => $description,
             'options' => ['show_arguments' => true, 'id' => 'definition_1'],
+        ];
+
+        $file = \sprintf('%s.%s', trim('definition_arguments_with_locator_without_container', '.'), static::getFormat());
+        $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
+
+        yield 'Show arguments with multi argument type outside of a container ('.$file.')' => [
+            'object' => ObjectsProvider::getServicesWithLocatorArgumentsWithoutContainer(),
+            'expectedDescription' => $description,
+            'options' => ['show_arguments' => true],
         ];
     }
 }

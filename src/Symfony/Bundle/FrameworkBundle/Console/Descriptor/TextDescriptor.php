@@ -385,15 +385,16 @@ class TextDescriptor extends Descriptor
                     $argumentValues = $argument->getValues();
 
                     if ($argument instanceof TaggedIteratorArgument) {
-                        $description = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argumentValues)));
-
                         if (null === $container) {
+                            $description = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argumentValues)));
+
                             $table->addRow([++$position, $description]);
                         } else {
-                            $taggedOrderedServices = array_keys($container->findTaggedServiceIds($argument->getTag()));
+                            $services = array_keys($container->findTaggedServiceIds($argument->getTag()));
+                            $description = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($services)));
 
-                            foreach ($taggedOrderedServices as $order => $ref) {
-                                if (array_key_first($taggedOrderedServices) === $order) {
+                            foreach ($services as $order => $ref) {
+                                if (array_key_first($services) === $order) {
                                     $table->addRow([++$position, $description, $ref]);
                                 } else {
                                     $table->addRow(['', '', $ref]);
@@ -402,15 +403,7 @@ class TextDescriptor extends Descriptor
                         }
                     } else {
                         $description = \sprintf('Iterator (%d element(s))', \count($argumentValues));
-
-                        foreach ($argumentValues as $order => $ref) {
-                            $service = \sprintf('Service (%s)', $ref);
-                            if (array_key_first($argumentValues) === $order) {
-                                $table->addRow([++$position, $description, $service]);
-                            } else {
-                                $table->addRow(['', '', $service]);
-                            }
-                        }
+                        $table->addRow([++$position, $description]);
                     }
                 } elseif ($argument instanceof ServiceLocatorArgument) {
                     if (null === $container) {
