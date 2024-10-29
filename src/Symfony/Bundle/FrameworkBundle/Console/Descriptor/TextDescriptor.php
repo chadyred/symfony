@@ -386,7 +386,7 @@ class TextDescriptor extends Descriptor
 
                     if ($argument instanceof TaggedIteratorArgument) {
                         if (null === $container) {
-                            $description = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($argumentValues)));
+                            $description = \sprintf('Tagged Iterator for "%s"', $argument->getTag());
 
                             $table->addRow([++$position, $description]);
                         } else {
@@ -407,7 +407,11 @@ class TextDescriptor extends Descriptor
                     }
                 } elseif ($argument instanceof ServiceLocatorArgument) {
                     if (null === $container) {
-                        $description = \sprintf('Service locator (%d element(s))', \count($argument->getTaggedIteratorArgument()?->getValues() ?? $argument->getValues()));
+                        $description = 'Service locator';
+
+                        if (null === $argument->getTaggedIteratorArgument()) {
+                            $description = \sprintf('Service locator (%d element(s))', \count($argument->getValues()));
+                        }
 
                         $table->addRow([++$position, $description]);
                     } else {
