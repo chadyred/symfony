@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Tests\Fixtures\Suit;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Argument\AbstractArgument;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
@@ -267,11 +268,19 @@ class ObjectsProvider
                     'Full\\Qualified\\Class2' => new Reference('definition_2'),
                     'Full\\Qualified\\Class3' => new Reference('definition_3'),
                     'Full\\Qualified\\Class4' => new Reference('definition_4'),
+                    'mainEmail' => 'contact@email.com',
                 ]))
                 ->addArgument(ServiceLocatorTagPass::register($container, [
                     new Reference('definition_2'),
                     new Reference('definition_3'),
                     new Reference('definition_4'),
+                    'mainEmail' => 'contact@email.com',
+                ]))
+                ->addArgument(ServiceLocatorTagPass::register($container, [
+                    1,
+                    true,
+                    'contact@email.com',
+                    new ServiceClosureArgument(new Reference('mailer')),
                 ]))
                 ->addArgument(new AbstractArgument('to complete'))
                 ->addArgument([
@@ -296,7 +305,7 @@ class ObjectsProvider
         return $container;
     }
 
-    public static function getServicesWithLocatorArgumentsWithoutContainer()
+    public static function getDefinitionWithLocatorArguments()
     {
         $definition0 = new Definition('Full\\Qualified\\Class1');
 

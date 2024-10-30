@@ -383,7 +383,7 @@ abstract class AbstractDescriptorTestCase extends TestCase
         $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
 
         yield 'Show arguments option used outside of a container ('.$file.')' => [
-            'object' => ObjectsProvider::getServicesWithLocatorArgumentsWithoutContainer(),
+            'object' => ObjectsProvider::getDefinitionWithLocatorArguments(),
             'expectedDescription' => $description,
             'options' => ['show_arguments' => true],
         ];

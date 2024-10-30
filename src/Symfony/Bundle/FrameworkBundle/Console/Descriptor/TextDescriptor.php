@@ -370,14 +370,17 @@ class TextDescriptor extends Descriptor
                     ) {
                         $table->addRow([++$position, \sprintf('Service(%s)', $argument), '-']);
                     } else {
-                        $services = $argumentDefinition->getArguments()[0];
-                        $description = \sprintf('Service locator (%d element(s))', \count($services));
+                        $argumentCollection = $argumentDefinition->getArguments()[0];
+                        $description = \sprintf('Service locator (%d element(s))', \count($argumentCollection));
 
-                        foreach ($services as $key => $serviceWrapper) {
-                            if (array_key_first($services) === $key) {
-                                $table->addRow([++$position, $description, $serviceWrapper->getValues()[0]]);
+                        foreach ($argumentCollection as $key => $argumentUnit) {
+                            $argumentValue = $argumentUnit->getValues()[0];
+                            $argumentDescription = !($argumentValue instanceof Reference) ? json_encode($argumentValue) : $argumentValue;
+
+                            if (array_key_first($argumentCollection) === $key) {
+                                $table->addRow([++$position, $description, $argumentDescription]);
                             } else {
-                                $table->addRow(['', '', $serviceWrapper->getValues()[0]]);
+                                $table->addRow(['', '', $argumentDescription]);
                             }
                         }
                     }

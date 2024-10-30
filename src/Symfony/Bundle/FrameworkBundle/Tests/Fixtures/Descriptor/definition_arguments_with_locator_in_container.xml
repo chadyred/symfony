@@ -7,8 +7,10 @@
     <argument key="Full\Qualified\Class2" type="service" id="definition_2"/>
     <argument key="Full\Qualified\Class3" type="service" id="definition_3"/>
     <argument key="Full\Qualified\Class4" type="service" id="definition_4"/>
+    <argument key="mainEmail">contact@email.com</argument>
   </argument>
-  <argument type="service" id=".service_locator.VMNcBkE"/>
+  <argument type="service" id=".service_locator.kbKXy4g"/>
+  <argument type="service" id=".service_locator.NnLrqC0"/>
   <argument type="abstract">to complete</argument>
   <argument type="collection">
     <argument type="service" id="definition_2"/>

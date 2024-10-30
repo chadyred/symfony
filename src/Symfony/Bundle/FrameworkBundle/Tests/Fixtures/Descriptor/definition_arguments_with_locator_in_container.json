@@ -27,11 +27,16 @@
    "Full\\Qualified\\Class4": {
     "type": "service",
     "id": "definition_4"
-   }
+   },
+   "mainEmail": "contact@email.com"
   },
   {
    "type": "service",
-   "id": ".service_locator.VMNcBkE"
+   "id": ".service_locator.kbKXy4g"
+  },
+  {
+   "type": "service",
+   "id": ".service_locator.NnLrqC0"
   },
   {
    "type": "abstract",
