@@ -20,6 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Argument\AbstractArgument;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -435,6 +436,8 @@ class TextDescriptor extends Descriptor
                     $table->addRow([++$position, ltrim(var_export($argument, true), '\\'), '-']);
                 } elseif ($argument instanceof AbstractArgument) {
                     $table->addRow([++$position, \sprintf('Abstract argument (%s)', $argument->getText()), '-']);
+                } elseif ($argument instanceof ServiceClosureArgument) {
+                    $table->addRow([++$position, \sprintf('Closure argument (%s)', $argument->getValues()[0]), '-']);
                 } elseif (\is_array($argument)) {
                     $table->addRow([++$position, \sprintf('Array (%d element(s))', \count($argument)), '-']);
                 } else {

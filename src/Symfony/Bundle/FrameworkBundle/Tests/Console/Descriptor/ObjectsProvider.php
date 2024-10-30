@@ -293,7 +293,8 @@ class ObjectsProvider
                     new Reference('definition_2'),
                     new Reference('definition_3'),
                     new Reference('definition_4'),
-                ])),
+                ]))
+                ->addArgument(new ServiceClosureArgument(new Reference('mailer'))),
             'definition_2' => $service1
                 ->addTag('app_tag'),
             'definition_3' => $service2

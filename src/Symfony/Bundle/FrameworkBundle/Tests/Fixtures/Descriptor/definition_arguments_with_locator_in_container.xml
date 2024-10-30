@@ -23,4 +23,5 @@
     <argument type="service" id="definition_3"/>
     <argument type="service" id="definition_4"/>
   </argument>
+  <argument type="service" id="mailer"/>
 </definition>

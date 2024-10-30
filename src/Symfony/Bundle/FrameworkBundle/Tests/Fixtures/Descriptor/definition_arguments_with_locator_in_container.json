@@ -70,7 +70,11 @@
     "type": "service",
     "id": "definition_4"
    }
-  ]
+  ],
+  {
+   "type": "service",
+   "id": "mailer"
+  }
  ],
  "file": null,
  "tags": [],
