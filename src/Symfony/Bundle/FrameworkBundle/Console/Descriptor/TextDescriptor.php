@@ -40,8 +40,7 @@ class TextDescriptor extends Descriptor
 {
     public function __construct(
         private ?FileLinkFormatter $fileLinkFormatter = null,
-    )
-    {
+    ) {
     }
 
     protected function describeRouteCollection(RouteCollection $routes, array $options = []): void
@@ -286,8 +285,8 @@ class TextDescriptor extends Descriptor
             $options['output']->title(\sprintf('Information for Service "<info>%s</info>"', $options['id']));
         }
 
-        if ('' !== $classDescription = $this->getClassDescription((string)$definition->getClass())) {
-            $options['output']->text($classDescription . "\n");
+        if ('' !== $classDescription = $this->getClassDescription((string) $definition->getClass())) {
+            $options['output']->text($classDescription."\n");
         }
 
         $tableHeaders = ['Option', 'Value'];
@@ -300,7 +299,7 @@ class TextDescriptor extends Descriptor
             $tagInformation = [];
             foreach ($tags as $tagName => $tagData) {
                 foreach ($tagData as $tagParameters) {
-                    $parameters = array_map(fn($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
+                    $parameters = array_map(fn ($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
                     $parameters = implode(', ', $parameters);
 
                     if ('' === $parameters) {
@@ -476,16 +475,16 @@ class TextDescriptor extends Descriptor
     protected function describeContainerAlias(Alias $alias, array $options = [], ?ContainerBuilder $container = null): void
     {
         if ($alias->isPublic() && !$alias->isPrivate()) {
-            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string)$alias));
+            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string) $alias));
         } else {
-            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string)$alias));
+            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string) $alias));
         }
 
         if (!$container) {
             return;
         }
 
-        $this->describeContainerDefinition($container->getDefinition((string)$alias), array_merge($options, ['id' => (string)$alias]), $container);
+        $this->describeContainerDefinition($container->getDefinition((string) $alias), array_merge($options, ['id' => (string) $alias]), $container);
     }
 
     protected function describeContainerParameter(mixed $parameter, ?array $deprecation, array $options = []): void
@@ -511,13 +510,13 @@ class TextDescriptor extends Descriptor
         $options['output']->title('Symfony Container Environment Variables');
 
         if (null !== $name = $options['name'] ?? null) {
-            $options['output']->comment('Displaying detailed environment variable usage matching ' . $name);
+            $options['output']->comment('Displaying detailed environment variable usage matching '.$name);
 
             $matches = false;
             foreach ($envs as $env) {
                 if ($name === $env['name'] || false !== stripos($env['name'], $name)) {
                     $matches = true;
-                    $options['output']->section('%env(' . $env['processor'] . ':' . $env['name'] . ')%');
+                    $options['output']->section('%env('.$env['processor'].':'.$env['name'].')%');
                     $options['output']->table([], [
                         ['<info>Default value</>', $env['default_available'] ? $dump($env['default_value']) : 'n/a'],
                         ['<info>Real value</>', $env['runtime_available'] ? $dump($env['runtime_value']) : 'n/a'],
@@ -584,7 +583,7 @@ class TextDescriptor extends Descriptor
         } else {
             $title .= ' Grouped by Event';
             // Try to see if "events" exists
-            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
+            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn ($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
         }
 
         $options['output']->title($title);
@@ -709,7 +708,7 @@ class TextDescriptor extends Descriptor
                 return \sprintf('%s::%s()', $class->name, $r->name);
             }
 
-            return $r->name . '()';
+            return $r->name.'()';
         }
 
         if (method_exists($callable, '__invoke')) {
