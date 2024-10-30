@@ -373,7 +373,7 @@ abstract class AbstractDescriptorTestCase extends TestCase
         $file = \sprintf('%s.%s', trim('definition_arguments_with_locator_in_container', '.'), static::getFormat());
         $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
 
-        yield 'Show arguments with arguments through a container ('.$file.')' => [
+        yield 'Show arguments option used through a container ('.$file.')' => [
             'object' => ObjectsProvider::getContainerServicesWithLocatorArguments(),
             'expectedDescription' => $description,
             'options' => ['show_arguments' => true, 'id' => 'definition_1'],
@@ -382,7 +382,7 @@ abstract class AbstractDescriptorTestCase extends TestCase
         $file = \sprintf('%s.%s', trim('definition_arguments_with_locator_without_container', '.'), static::getFormat());
         $description = file_get_contents(__DIR__.'/../../Fixtures/Descriptor/'.$file);
 
-        yield 'Show arguments with arguments outside of a container ('.$file.')' => [
+        yield 'Show arguments option used outside of a container ('.$file.')' => [
             'object' => ObjectsProvider::getServicesWithLocatorArgumentsWithoutContainer(),
             'expectedDescription' => $description,
             'options' => ['show_arguments' => true],

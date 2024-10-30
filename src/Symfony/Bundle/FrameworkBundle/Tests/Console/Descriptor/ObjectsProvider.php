@@ -23,7 +23,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\DependencyInjection\Tests\Fixtures\NamedEnumArgumentDummy;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Routing\CompiledRoute;
 use Symfony\Component\Routing\Route;
@@ -117,13 +116,13 @@ class ObjectsProvider
     public static function getContainerDeprecations()
     {
         $builderWithDeprecations = new ContainerBuilder();
-        $builderWithDeprecations->setParameter('kernel.cache_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
-        $builderWithDeprecations->setParameter('kernel.build_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
+        $builderWithDeprecations->setParameter('kernel.cache_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
+        $builderWithDeprecations->setParameter('kernel.build_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
         $builderWithDeprecations->setParameter('kernel.container_class', 'KernelContainerWith');
 
         $builderWithoutDeprecations = new ContainerBuilder();
-        $builderWithoutDeprecations->setParameter('kernel.cache_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
-        $builderWithoutDeprecations->setParameter('kernel.build_dir', __DIR__ . '/../../Fixtures/Descriptor/cache');
+        $builderWithoutDeprecations->setParameter('kernel.cache_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
+        $builderWithoutDeprecations->setParameter('kernel.build_dir', __DIR__.'/../../Fixtures/Descriptor/cache');
         $builderWithoutDeprecations->setParameter('kernel.container_class', 'KernelContainerWithout');
 
         return [
@@ -291,7 +290,7 @@ class ObjectsProvider
             'definition_3' => $service2
                 ->addTag('app_tag'),
             'definition_4' => $service3
-                ->addTag('app_tag')
+                ->addTag('app_tag'),
         ]);
 
         return $container;
@@ -331,7 +330,7 @@ class ObjectsProvider
         $eventDispatcher = new EventDispatcher();
 
         $eventDispatcher->addListener('event1', 'var_dump', 255);
-        $eventDispatcher->addListener('event1', fn() => 'Closure', -1);
+        $eventDispatcher->addListener('event1', fn () => 'Closure', -1);
         $eventDispatcher->addListener('event2', new CallableClass());
 
         return ['event_dispatcher_1' => $eventDispatcher];
@@ -344,7 +343,7 @@ class ObjectsProvider
             'callable_2' => ['Symfony\\Bundle\\FrameworkBundle\\Tests\\Console\\Descriptor\\CallableClass', 'staticMethod'],
             'callable_3' => [new CallableClass(), 'method'],
             'callable_4' => 'Symfony\\Bundle\\FrameworkBundle\\Tests\\Console\\Descriptor\\CallableClass::staticMethod',
-            'callable_6' => fn() => 'Closure',
+            'callable_6' => fn () => 'Closure',
             'callable_7' => new CallableClass(),
             'callable_from_callable' => (new CallableClass())(...),
         ];
