@@ -40,7 +40,8 @@ class TextDescriptor extends Descriptor
 {
     public function __construct(
         private ?FileLinkFormatter $fileLinkFormatter = null,
-    ) {
+    )
+    {
     }
 
     protected function describeRouteCollection(RouteCollection $routes, array $options = []): void
@@ -285,8 +286,8 @@ class TextDescriptor extends Descriptor
             $options['output']->title(\sprintf('Information for Service "<info>%s</info>"', $options['id']));
         }
 
-        if ('' !== $classDescription = $this->getClassDescription((string) $definition->getClass())) {
-            $options['output']->text($classDescription."\n");
+        if ('' !== $classDescription = $this->getClassDescription((string)$definition->getClass())) {
+            $options['output']->text($classDescription . "\n");
         }
 
         $tableHeaders = ['Option', 'Value'];
@@ -299,7 +300,7 @@ class TextDescriptor extends Descriptor
             $tagInformation = [];
             foreach ($tags as $tagName => $tagData) {
                 foreach ($tagData as $tagParameters) {
-                    $parameters = array_map(fn ($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
+                    $parameters = array_map(fn($key, $value) => \sprintf('<info>%s</info>: %s', $key, \is_array($value) ? $this->formatParameter($value) : $value), array_keys($tagParameters), array_values($tagParameters));
                     $parameters = implode(', ', $parameters);
 
                     if ('' === $parameters) {
@@ -365,9 +366,11 @@ class TextDescriptor extends Descriptor
 
             foreach ($arguments as $position => $argument) {
                 if ($argument instanceof Reference) {
-                    if (null === $container) {
-                        $table->addRow([++$position, \sprintf('Service(%s)', $argument)]);
-                    } elseif (($argumentDefinition = $container->getDefinition($argument))->hasTag('container.service_locator')) {
+                    if (null === $container
+                        || !($argumentDefinition = $container->getDefinition($argument))->hasTag('container.service_locator')
+                    ) {
+                        $table->addRow([++$position, \sprintf('Service(%s)', $argument), '-']);
+                    } else {
                         $services = $argumentDefinition->getArguments()[0];
                         $description = \sprintf('Service locator (%d element(s))', \count($services));
 
@@ -378,8 +381,6 @@ class TextDescriptor extends Descriptor
                                 $table->addRow(['', '', $serviceWrapper->getValues()[0]]);
                             }
                         }
-                    } else {
-                        $table->addRow([++$position, $argument]);
                     }
                 } elseif ($argument instanceof IteratorArgument) {
                     $argumentValues = $argument->getValues();
@@ -388,7 +389,7 @@ class TextDescriptor extends Descriptor
                         if (null === $container) {
                             $description = \sprintf('Tagged Iterator for "%s"', $argument->getTag());
 
-                            $table->addRow([++$position, $description]);
+                            $table->addRow([++$position, $description, '-']);
                         } else {
                             $services = array_keys($container->findTaggedServiceIds($argument->getTag()));
                             $description = \sprintf('Tagged Iterator for "%s"%s', $argument->getTag(), $options['is_debug'] ? '' : \sprintf(' (%d element(s))', \count($services)));
@@ -403,7 +404,7 @@ class TextDescriptor extends Descriptor
                         }
                     } else {
                         $description = \sprintf('Iterator (%d element(s))', \count($argumentValues));
-                        $table->addRow([++$position, $description]);
+                        $table->addRow([++$position, $description, '-']);
                     }
                 } elseif ($argument instanceof ServiceLocatorArgument) {
                     if (null === $container) {
@@ -413,7 +414,7 @@ class TextDescriptor extends Descriptor
                             $description = \sprintf('Service locator (%d element(s))', \count($argument->getValues()));
                         }
 
-                        $table->addRow([++$position, $description]);
+                        $table->addRow([++$position, $description, '-']);
                     } else {
                         $services = null !== $argument->getTaggedIteratorArgument() ? array_keys($container->findTaggedServiceIds($argument->getTaggedIteratorArgument()->getTag())) : $argument->getValues();
                         $description = \sprintf('Service locator (%d element(s))', \count($services));
@@ -427,15 +428,15 @@ class TextDescriptor extends Descriptor
                         }
                     }
                 } elseif ($argument instanceof Definition) {
-                    $table->addRow([++$position, 'Inlined Service']);
+                    $table->addRow([++$position, 'Inlined Service', '-']);
                 } elseif ($argument instanceof \UnitEnum) {
-                    $table->addRow([++$position, ltrim(var_export($argument, true), '\\')]);
+                    $table->addRow([++$position, ltrim(var_export($argument, true), '\\'), '-']);
                 } elseif ($argument instanceof AbstractArgument) {
-                    $table->addRow([++$position, \sprintf('Abstract argument (%s)', $argument->getText())]);
+                    $table->addRow([++$position, \sprintf('Abstract argument (%s)', $argument->getText()), '-']);
                 } elseif (\is_array($argument)) {
-                    $table->addRow([++$position, \sprintf('Array (%d element(s))', \count($argument))]);
+                    $table->addRow([++$position, \sprintf('Array (%d element(s))', \count($argument)), '-']);
                 } else {
-                    $table->addRow([++$position, $argument]);
+                    $table->addRow([++$position, $argument, '-']);
                 }
 
                 if (--$position !== array_key_last($arguments)) {
@@ -475,16 +476,16 @@ class TextDescriptor extends Descriptor
     protected function describeContainerAlias(Alias $alias, array $options = [], ?ContainerBuilder $container = null): void
     {
         if ($alias->isPublic() && !$alias->isPrivate()) {
-            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string) $alias));
+            $options['output']->comment(\sprintf('This service is a <info>public</info> alias for the service <info>%s</info>', (string)$alias));
         } else {
-            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string) $alias));
+            $options['output']->comment(\sprintf('This service is a <comment>private</comment> alias for the service <info>%s</info>', (string)$alias));
         }
 
         if (!$container) {
             return;
         }
 
-        $this->describeContainerDefinition($container->getDefinition((string) $alias), array_merge($options, ['id' => (string) $alias]), $container);
+        $this->describeContainerDefinition($container->getDefinition((string)$alias), array_merge($options, ['id' => (string)$alias]), $container);
     }
 
     protected function describeContainerParameter(mixed $parameter, ?array $deprecation, array $options = []): void
@@ -510,13 +511,13 @@ class TextDescriptor extends Descriptor
         $options['output']->title('Symfony Container Environment Variables');
 
         if (null !== $name = $options['name'] ?? null) {
-            $options['output']->comment('Displaying detailed environment variable usage matching '.$name);
+            $options['output']->comment('Displaying detailed environment variable usage matching ' . $name);
 
             $matches = false;
             foreach ($envs as $env) {
                 if ($name === $env['name'] || false !== stripos($env['name'], $name)) {
                     $matches = true;
-                    $options['output']->section('%env('.$env['processor'].':'.$env['name'].')%');
+                    $options['output']->section('%env(' . $env['processor'] . ':' . $env['name'] . ')%');
                     $options['output']->table([], [
                         ['<info>Default value</>', $env['default_available'] ? $dump($env['default_value']) : 'n/a'],
                         ['<info>Real value</>', $env['runtime_available'] ? $dump($env['runtime_value']) : 'n/a'],
@@ -583,7 +584,7 @@ class TextDescriptor extends Descriptor
         } else {
             $title .= ' Grouped by Event';
             // Try to see if "events" exists
-            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn ($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
+            $registeredListeners = \array_key_exists('events', $options) ? array_combine($options['events'], array_map(fn($event) => $eventDispatcher->getListeners($event), $options['events'])) : $eventDispatcher->getListeners();
         }
 
         $options['output']->title($title);
@@ -708,7 +709,7 @@ class TextDescriptor extends Descriptor
                 return \sprintf('%s::%s()', $class->name, $r->name);
             }
 
-            return $r->name.'()';
+            return $r->name . '()';
         }
 
         if (method_exists($callable, '__invoke')) {

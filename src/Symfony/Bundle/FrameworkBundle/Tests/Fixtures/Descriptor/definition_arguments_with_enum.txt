@@ -17,5 +17,5 @@
 +---+-------------------------------[30;47;1m Arguments [39;49;22m----------------------+-------------+
 |[32m # [39m|[32m Service                                                        [39m|[32m Argument(s) [39m|
 +---+----------------------------------------------------------------+-------------+
-| 1 | Symfony\Bundle\FrameworkBundle\Tests\Fixtures\FooUnitEnum::FOO |             |
+| 1 | Symfony\Bundle\FrameworkBundle\Tests\Fixtures\FooUnitEnum::FOO | -           |
 +---+----------------------------------------------------------------+-------------+
